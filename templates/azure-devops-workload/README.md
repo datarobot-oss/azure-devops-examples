@@ -4,13 +4,7 @@ A pipeline that deploys the app in `app/` to DataRobot as a workload. A pull req
 
 The app is the `backend/` folder of the DataRobot `minimal-app-template`, a FastAPI server with `/` and `/hello`, with its dependencies pinned. Replace it with your own app. The only requirements are a `Dockerfile` at the root of `app/`, a port of 1024 or above, and a `linux/amd64` image.
 
-## Verification
-
-The pipeline ran on Azure DevOps Services (free tier) with a Microsoft-hosted `ubuntu-24.04` agent, `dr` v0.13.1, and DataRobot prod US. Steps marked unverified were not run.
-
-- A pull request printed the plan, and its merge ran the approval, the deploy, and the smoke test.
-- The pipeline pins `dr` v0.14.1, and the same run sequence passed with it.
-- The pipeline deployed the Spring Boot sample in `app-java/` with `appDir` set to `app-java`. The roll took 7 minutes 42 seconds, and `/hello` answered 200.
+The pipeline pins `dr` v0.14.1. Steps that no example run covers are marked unverified.
 
 ## Files
 
@@ -42,7 +36,7 @@ Follow these steps once per repository.
 
 3. Create an environment named `prod` and add two checks on its **Approvals and checks** tab:
    - An Approval, with `requesterCannotBeApprover` on and one approver who isn't the author.
-   - An Exclusive lock. Two `dr workload up` runs at the same time failed with HTTP 422 on `dr` v0.12.0.
+   - An Exclusive lock. Two `dr workload up` runs at the same time fail with HTTP 422.
 
 4. Create a pipeline from `azure-pipelines.yml`. Authorize it to use the variable group and the `prod` environment on its first run.
 
@@ -67,7 +61,7 @@ The following table shows what each trigger runs.
 | Pull request to `main` | Runs `dr workload up --dry-run` and prints the plan. | Skipped. |
 | Push to `main` that changes `app/` or `app-java/` | Same. | Waits for the approval, runs `dr workload up --promote`, then calls `/hello` until it answers 200. |
 
-A deploy takes about 8 minutes on prod, mostly the rollout. Every run uploads the code again, because a CI checkout has no `.datarobot/` cache, so a run with no code change still rolls a new version. The `app/**` and `app-java/**` path filters keep unrelated commits from starting a deploy.
+A deploy takes about 8 minutes, mostly the rollout. Every run uploads the code again, because a CI checkout has no `.datarobot/` cache, so a run with no code change still rolls a new version. The `app/**` and `app-java/**` path filters keep unrelated commits from starting a deploy.
 
 ## Parameters
 

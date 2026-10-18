@@ -31,7 +31,7 @@ Guidance for AI coding agents and for people who start here. This repository hol
 
 Run the checks in [CONTRIBUTING.md](CONTRIBUTING.md) before you open a pull request: markdownlint, yamllint, and a `docker build` of each sample app you touched. When you change anything under `.github`, CI also audits the workflows with zizmor and actionlint.
 
-When you change a pipeline, run it on Azure DevOps. A YAML edit that passes the linters can still fail on the service. Update the "Verification" section of the README with what you ran, and mark any step you didn't run as unverified.
+When you change a pipeline, run it on Azure DevOps. A YAML edit that passes the linters can still fail on the service. Say in the pull request what you ran, and mark any step you couldn't run as unverified in the README.
 
 ## Follow these conventions
 

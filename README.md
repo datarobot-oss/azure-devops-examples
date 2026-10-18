@@ -38,21 +38,16 @@ Both pipelines have a Plan stage and an Apply stage:
 - A pull request runs the Plan stage only. It prints what the deployment would change.
 - A push to `main` that changes the app runs the Plan stage, then the Apply stage. The Apply stage waits for an approval on the `prod` environment, deploys the app, and calls `/hello` on it until the app answers with HTTP 200.
 
-## What was tested
+## Supported environments
 
-Both examples ran on Azure DevOps Services with Microsoft-hosted agents against a DataRobot cloud environment:
-
-- **Workload example.** A pull request plan, a merge, the approval, the deploy, and a smoke test, for the Python and the Spring Boot sample.
-- **Custom Application example.** A first deploy, an update, a pull request plan with no changes, and the Pulumi state lock on Azure Blob Storage.
-
-The examples weren't tested with a self-hosted agent, Azure DevOps Server, a network without access to GitHub, or a self-managed DataRobot installation. Each example README marks its unverified steps.
+The examples target Azure DevOps Services with Microsoft-hosted agents and a multi-tenant SaaS DataRobot environment. They don't cover a self-hosted agent, Azure DevOps Server, a network without access to GitHub, or a self-managed DataRobot installation. Each example README marks the steps that no example run covers as unverified.
 
 ## Limitations
 
 These limitations affect how the examples behave:
 
 - The Custom Application example needs a DataRobot release that can build an image from a Docker context. Its README describes the resources it creates.
-- One pipeline step of the Custom Application example sets a fixed file time on the app folder, so that an unchanged app doesn't plan a rebuild on every run. Remove the step after a `datarobot` provider release that sets a fixed archive time ([terraform-provider-datarobot#438](https://github.com/datarobot-community/terraform-provider-datarobot/pull/438)).
+- The Custom Application example includes a pipeline step that sets a fixed file time on the app folder. Keep it: without it, every run plans a rebuild of an unchanged app.
 
 ## Troubleshooting
 

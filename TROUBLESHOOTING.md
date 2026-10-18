@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Fixes for the failures seen while running the two example pipelines on Azure DevOps Services. Each fix names the cause, so a similar failure in your own pipeline is quicker to place. For failures that belong to one example, see the "Recover from a failure" and "Limits" sections of its README.
+Fixes for common failures of the two example pipelines. Each fix names the cause, so a similar failure in an adapted pipeline is quicker to place. For failures that belong to one example, see the "Recover from a failure" and "Limits" sections of its README.
 
 ## Both examples
 
@@ -16,7 +16,7 @@ The following table lists failures that apply to both pipelines.
 | The run waits at the approval and nobody can approve it. | `requesterCannotBeApprover` is on, so the person who started the run can't approve it. | Add a second approver to the Approval check on the `prod` environment. |
 | A step can't read a secret variable. | Azure DevOps doesn't pass secret variables to scripts on its own. | Map each secret in the `env:` block of the step, as the pipelines do, for example `DATAROBOT_API_TOKEN: $(DATAROBOT_API_TOKEN)`. |
 | The YAML is rejected for a template expression in a top-level `pool:`. | A top-level `pool:` can't hold template expressions. | Put the `pool:` block on each job, as the pipelines do. |
-| A step times out against the DataRobot endpoint. | A Microsoft-hosted agent reaches DataRobot cloud, but it can't reach an environment that isn't open to the public internet. | Use a self-hosted pool with a route to the endpoint. Unverified: no self-hosted agent was tested. |
+| A step times out against the DataRobot endpoint. | A Microsoft-hosted agent reaches multi-tenant SaaS, but it can't reach an environment that isn't open to the public internet. | Use a self-hosted pool with a route to the endpoint. Unverified: no self-hosted agent was tested. |
 | The smoke test prints HTTP 401 or 503 on the first attempts. | A new route can answer 401 or 503 for about 20 seconds. | None. The step retries six times, 10 seconds apart. If all six fail, read the deploy log. |
 
 ## Workload example

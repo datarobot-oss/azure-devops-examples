@@ -4,18 +4,7 @@ A pipeline that deploys the Spring Boot app in `app/` to DataRobot as a Custom A
 
 Use it when the DataRobot release has no Workloads, or when Custom Applications already run. For a release with Workloads, use [azure-devops-workload](../azure-devops-workload/README.md).
 
-## Verification
-
-The pipeline ran in two places. Steps marked unverified were not run.
-
-- From a workstation against DataRobot staging, with Pulumi v3.267.0 and the `datarobot` provider 0.10.45:
-  - The `Pulumi.yaml` in this folder created the app in 2 minutes, and `/hello` answered 200.
-  - A change to `app/` updated the environment, replaced the source, and updated the app. The app then served the new message.
-  - On Azure Blob Storage, Pulumi refused a second update while one ran. A run that was killed left a lock that `pulumi cancel` cleared.
-- On Azure DevOps Services with a Microsoft-hosted `ubuntu-24.04` agent, against DataRobot prod US, with the state in Azure Blob Storage:
-  - The first run created four resources in 2 minutes 41 seconds, and `/hello` answered 200.
-  - A second run on a new agent changed `app/`, read the state from the container, updated the environment and the app, replaced the source, and kept the app URL. It took 2 minutes 53 seconds.
-- Unverified: a self-hosted agent and a tarball upload.
+The pipeline pins Pulumi v3.267.0 and the `datarobot` provider 0.10.45. A self-hosted agent and a tarball upload aren't covered by an example run, and the steps that use them are marked unverified.
 
 ## Choose a primitive
 
@@ -61,7 +50,7 @@ docker build --platform linux/amd64 -t app:ci app
 docker save -o app.tar app:ci
 ```
 
-Use the tarball when the DataRobot cluster can't reach the base-image registry or Maven Central. The tarball of the sample is 347 MB, and the upload took 54 seconds. Unverified in the pipeline.
+Use the tarball when the DataRobot cluster can't reach the base-image registry or Maven Central. The tarball of the sample is about 350 MB. The pipeline doesn't exercise this path, so it's unverified.
 
 ## Set up the pipeline
 
@@ -102,15 +91,15 @@ The following table shows what each trigger runs.
 | Pull request to `main` | Runs `pulumi preview` and prints the plan. | Skipped. |
 | Push to `main` that changes `app/`, `source/`, or `Pulumi.yaml` | Same. | Waits for the approval, runs `pulumi up`, then calls `/hello` on the app URL until it answers 200. |
 
-The first deploy took about 3 minutes in the pipeline, and an update took the same, mostly the environment rebuild and the app restart.
+A deploy takes about 3 minutes, mostly the environment rebuild and the app restart.
 
 ## State and locking
 
-Pulumi keeps the state in the `pulumi-state` container. A lock file in the container stops a second update while one runs. The following table lists three cases, verified against an Azure Blob Storage container.
+Pulumi keeps the state in the `pulumi-state` container. A lock file in the container stops a second update while one runs. The following table lists three cases.
 
 | Case | Result |
 | --- | --- |
-| A second update starts 10 seconds after the first. | The second fails with `the stack is currently locked`, and the first finishes. |
+| A second update starts while the first runs. | The second fails with `the stack is currently locked`, and the first finishes. |
 | Two updates start at the same moment. | Both fail with the same message, and nothing runs. |
 | A run is killed. | The next run fails on the stale lock. `pulumi cancel` clears it, and the run after that works. |
 
@@ -120,7 +109,7 @@ Don't delete the container or lose the passphrase. The state is the only record 
 
 ## Recover from a failure
 
-The following cases cover the failures seen in testing.
+The following cases cover common failures.
 
 - **A run was cancelled and the next one reports `the stack is currently locked`.** Run `pulumi cancel --yes` against the stack. It removes the stale lock. Check that no run is still active first. Two runs that started at the same moment can both fail with this message. Run one of them again.
 - **A create failed and `pulumi destroy` then fails with 422 on the environment or the source.** A failed `CustomApplication` create isn't in the state, so the application is an orphan that still references them. Delete the application in DataRobot, then run `pulumi destroy` again.
@@ -152,7 +141,7 @@ Unverified: this was not run with a multi-component project.
 
 These limits apply to the pipeline.
 
-- The `datarobot` provider hashes a zip of the Docker context, and the zip carries file times. A checkout writes new times on every run, so without `templates/fix-file-times.yml` each run plans a rebuild of the environment, a replacement of the source, and an update of the app. With the step, a pull request that changed only a README planned 4 unchanged resources. Verified on Azure DevOps Services. The first run after adding the step still updates the environment once, because the state holds the old hash. A provider release with a fixed archive time makes the step unnecessary: [terraform-provider-datarobot#438](https://github.com/datarobot-community/terraform-provider-datarobot/pull/438).
+- The `datarobot` provider hashes a zip of the Docker context, and the zip carries file times. A checkout writes new times on every run, so without `templates/fix-file-times.yml` each run plans a rebuild of the environment, a replacement of the source, and an update of the app. Keep the step in both stages. The first run after adding it still updates the environment once, because the state holds the old hash.
 - A self-hosted agent needs `bash`, `curl`, `tar`, and `sha256sum`, and a route to the DataRobot endpoint, to GitHub for the Pulumi release, and to Azure Blob Storage. Unverified.
 - Pulumi downloads the `datarobot` provider plugin from the GitHub releases of `datarobot-community/pulumi-datarobot`, set by `pluginDownloadURL` in `Pulumi.yaml`. The default Pulumi plugin host doesn't have it and answers 403, so a fresh agent fails without that setting. A network without access to GitHub needs the plugin installed first from a mirror, with `pulumi plugin install resource datarobot v0.10.45 --server <mirror>`. Unverified: the mirror.
 - The DataRobot cluster builds the image, so it needs access to the registry of the base images and to the package repositories.

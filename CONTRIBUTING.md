@@ -13,7 +13,7 @@ Contribute on GitHub. Open an issue before a large change, such as a new example
 
 ## Keep the examples honest
 
-Each README states what was run and marks the rest as unverified. When you change a pipeline, run it on Azure DevOps and update that statement. If you couldn't run a step, say so in the README and in the pull request.
+Each README marks the steps that no example run covers as unverified. When you change a pipeline, run it on Azure DevOps. If you couldn't run a step, mark it as unverified in the README and say so in the pull request.
 
 Each folder under `templates/` is meant to be copied as the root of its own repository. Don't link from one folder to a file outside it, except to the README of the sibling example.
 
