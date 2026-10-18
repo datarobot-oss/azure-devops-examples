@@ -1,0 +1,10 @@
+config:
+  # Prose lines run long on purpose: one paragraph per line.
+  line-length: false
+  # Several READMEs repeat the same section names, such as Limits and Parameters.
+  no-duplicate-heading:
+    siblings_only: true
+  # The pull request template starts with a banner, not a title.
+  first-line-h1: false
+  # The code of conduct and the contact lines use bare email addresses and URLs.
+  no-bare-urls: false

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/datarobot-oss/azure-devops-examples/blob/main/SECURITY.md
+    about: Don't open a public issue for a vulnerability. Follow the steps in SECURITY.md.
+  - name: DataRobot support
+    url: https://docs.datarobot.com/
+    about: For questions about DataRobot itself, such as accounts, licenses, or platform behavior.

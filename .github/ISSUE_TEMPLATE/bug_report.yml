@@ -1,0 +1,50 @@
+name: Bug report
+description: A pipeline, template, or document in this repository doesn't work as described.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Don't paste tokens, keys, or customer data. Redact pipeline logs before you attach them.
+  - type: dropdown
+    id: example
+    attributes:
+      label: Example
+      options:
+        - azure-devops-workload
+        - azure-devops-custom-app
+        - scripts/check_workload_ready.py
+        - Documentation
+    validations:
+      required: true
+  - type: dropdown
+    id: azure-devops
+    attributes:
+      label: Azure DevOps
+      options:
+        - Azure DevOps Services, Microsoft-hosted agent
+        - Azure DevOps Services, self-hosted agent
+        - Azure DevOps Server
+    validations:
+      required: true
+  - type: input
+    id: datarobot
+    attributes:
+      label: DataRobot environment
+      description: For example, US cloud, EU cloud, or the release number of a self-managed install.
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: Include the failing step and the error message. Say what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List the setup steps you followed and any change you made to the example.
+    validations:
+      required: true
