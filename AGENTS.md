@@ -49,5 +49,6 @@ The following table lists where to look.
 | Choose an example and the shared prerequisites | [README.md](README.md) |
 | The workload pipeline, its parameters, and its limits | [templates/azure-devops-workload/README.md](templates/azure-devops-workload/README.md) |
 | The custom application pipeline, Pulumi state, and recovery | [templates/azure-devops-custom-app/README.md](templates/azure-devops-custom-app/README.md) |
+| A failed or stuck run, with the cause and the fix | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) |
 | Whether a DataRobot account supports Workloads | [scripts/check_workload_ready.py](scripts/check_workload_ready.py) |
 | Reporting a vulnerability | [SECURITY.md](SECURITY.md) |
