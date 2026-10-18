@@ -1,0 +1,27 @@
+# Installs the pinned dr CLI and checks its checksum.
+parameters:
+  - name: drSecureFile
+    type: string
+    default: ""
+
+steps:
+  - ${{ if ne(parameters.drSecureFile, '') }}:
+      - task: DownloadSecureFile@1
+        name: drTarball
+        displayName: Get dr from a Secure file
+        inputs:
+          secureFile: ${{ parameters.drSecureFile }}
+      - script: echo "##vso[task.setvariable variable=DR_TARBALL]$(drTarball.secureFilePath)"
+        displayName: Locate the tarball
+  - ${{ else }}:
+      - script: |
+          curl -fsSL -o "$(Agent.TempDirectory)/dr.tar.gz" \
+            "https://github.com/datarobot-oss/cli/releases/download/$(DR_VERSION)/dr_$(DR_VERSION)_Linux_x86_64.tar.gz"
+          echo "##vso[task.setvariable variable=DR_TARBALL]$(Agent.TempDirectory)/dr.tar.gz"
+        displayName: Download dr $(DR_VERSION)
+  - script: |
+      echo "$(DR_TARBALL_SHA256)  $(DR_TARBALL)" | sha256sum --check -
+      mkdir -p "$(Agent.TempDirectory)/dr-bin"
+      tar -xzf "$(DR_TARBALL)" -C "$(Agent.TempDirectory)/dr-bin" dr
+      echo "##vso[task.prependpath]$(Agent.TempDirectory)/dr-bin"
+    displayName: Verify and install dr

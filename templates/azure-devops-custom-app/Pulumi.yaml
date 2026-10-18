@@ -1,0 +1,42 @@
+name: java-app
+runtime: yaml
+description: A Spring Boot app as a DataRobot Custom Application
+resources:
+  # DataRobot builds the image from app/Dockerfile. Replace dockerContextPath with
+  # dockerImage to upload a tarball made by `docker save`. See the README.
+  appEnv:
+    type: datarobot:ExecutionEnvironment
+    properties:
+      name: java-app-env
+      dockerContextPath: app
+      description: Spring Boot app image, built from app/Dockerfile
+      programmingLanguage: other
+      useCases:
+        - customApplication
+    options:
+      version: 0.10.45
+      pluginDownloadURL: github://api.github.com/datarobot-community
+  # A Custom Application runs a source on top of a base environment. The source is
+  # one script that starts the app that the image already contains. A new environment
+  # version replaces the source, and DataRobot rejects two sources with one name, so the
+  # name carries the version.
+  appSource:
+    type: datarobot:ApplicationSource
+    properties:
+      name: java-app-source-${appEnv.versionId}
+      baseEnvironmentId: ${appEnv.id}
+      baseEnvironmentVersionId: ${appEnv.versionId}
+      folderPath: source
+    options:
+      version: 0.10.45
+      pluginDownloadURL: github://api.github.com/datarobot-community
+  app:
+    type: datarobot:CustomApplication
+    properties:
+      name: java-app
+      sourceVersionId: ${appSource.versionId}
+    options:
+      version: 0.10.45
+      pluginDownloadURL: github://api.github.com/datarobot-community
+outputs:
+  appUrl: ${app.applicationUrl}

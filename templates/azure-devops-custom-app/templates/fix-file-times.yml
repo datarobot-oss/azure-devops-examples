@@ -1,0 +1,6 @@
+# Gives every file of the Docker context the same time.
+# The datarobot provider hashes an archive of the folder, and the archive carries file times. A checkout writes
+# new times on every run, so without this step each run plans a rebuild of the environment.
+steps:
+  - script: find app -exec touch -h -d '2000-01-01T00:00:00Z' {} +
+    displayName: Set a fixed file time on the Docker context
