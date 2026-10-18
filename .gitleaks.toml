@@ -22,5 +22,5 @@ keywords = ["azure_storage_key", "accountkey"]
 [[rules]]
 id = "pulumi-passphrase-assignment"
 description = "A Pulumi config passphrase assigned a literal value"
-regex = '''(?i)PULUMI_CONFIG_PASSPHRASE["']?\s*[:=]\s*["']?[^\s$"'(){}]{8,}'''
+regex = '''(?i)PULUMI_CONFIG_PASSPHRASE["']?\s*[:=]\s*(?:"[^"$\r\n]{8,}"|'[^'$\r\n]{8,}'|[^\s$"'(){}]{8,})'''
 keywords = ["pulumi_config_passphrase"]
