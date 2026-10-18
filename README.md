@@ -1,44 +1,67 @@
 # DataRobot deploy examples for Azure DevOps
 
-Two pipelines that deploy an app to DataRobot from Azure DevOps. A pull request prints the plan. A merge to `main` waits for an approval, deploys, and runs a smoke test.
+Example Azure DevOps pipelines that deploy an app to DataRobot. Each example is a self-contained folder to copy into a repository and adapt. A pull request prints the deployment plan. A merge to `main` waits for an approval, deploys the app, and runs a smoke test.
 
-The following table lists the two examples.
+## Choose an example
 
-| Folder | Deploys | Use it when |
+The two examples differ in the DataRobot resource they create. Choose by what the DataRobot release supports. The following table compares them.
+
+| Example | Deploys | Use it when |
 | --- | --- | --- |
-| `templates/azure-devops-workload` | A container as a DataRobot Workload, with `dr workload up`. | The DataRobot release has Workloads. |
-| `templates/azure-devops-custom-app` | A container as a Custom Application, with Pulumi and the state in Azure Blob Storage. | The release has no Workloads, or Custom Applications already run. |
+| [`templates/azure-devops-workload`](templates/azure-devops-workload/README.md) | A container as a DataRobot Workload, with `dr workload up`. | The DataRobot release has Workloads. |
+| [`templates/azure-devops-custom-app`](templates/azure-devops-custom-app/README.md) | A container as a Custom Application, with Pulumi and the state in Azure Blob Storage. | The release has no Workloads, or Custom Applications already run. |
 
-Treat each folder as the root of its own repository. Copy its contents into an Azure Repos repository, then follow its `README.md`. Both examples include a small Spring Boot sample, and the workload example also has a Python sample. Replace the sample with the app to deploy.
+Both examples include a small Spring Boot sample app. The workload example also includes a Python sample.
 
-## Before you start
+To check what a release supports, run `scripts/check_workload_ready.py`. The script reads what the DataRobot account allows and changes nothing. It needs `uv` or Python 3 (3.12 is the tested version), and the DataRobot endpoint and an API key in the environment:
 
-Complete these steps before the first run.
+```sh
+export DATAROBOT_ENDPOINT=https://app.datarobot.com/api/v2
+export DATAROBOT_API_TOKEN=<apiKey>
+uv run scripts/check_workload_ready.py
+```
 
-1. Check which example fits the release. `scripts/check_workload_ready.py` reads what the DataRobot account allows. It needs `uv` or Python 3 (3.12 is the tested version), plus the DataRobot endpoint and an API key in the environment. It changes nothing.
-2. Use the key of a service account, not a person, and store it as a secret variable in Azure DevOps. Never put it in the repository.
-3. Plan for the settings that aren't files. Each README lists them: a variable group, an environment named `prod` with an approval and an exclusive lock, and a build validation policy on `main`.
+## Adopt an example
+
+Treat the chosen folder as the root of its own repository. To adopt it, follow these steps:
+
+1. Copy the contents of the folder, not the folder itself, into a new Azure Repos repository.
+2. Replace the sample app with the app to deploy.
+3. Create the settings that aren't files, as the `README.md` in the folder describes: a variable group named `datarobot-deploy`, an environment named `prod` with an Approval check and an Exclusive lock, and a build validation policy on `main`.
+
+Use the API key of a service account, not a person, and store it as a secret variable in the variable group. Never put it in the repository.
+
+## How the pipelines work
+
+Both pipelines have a Plan stage and an Apply stage:
+
+- A pull request runs the Plan stage only. It prints what the deployment would change.
+- A push to `main` that changes the app runs the Plan stage, then the Apply stage. The Apply stage waits for an approval on the `prod` environment, deploys the app, and calls `/hello` on it until the app answers with HTTP 200.
 
 ## What was tested
 
-Both examples ran on Azure DevOps Services with Microsoft-hosted `ubuntu-24.04` agents against DataRobot cloud (US).
+Both examples ran on Azure DevOps Services with Microsoft-hosted agents against a DataRobot cloud environment:
 
-- The workload example: a pull request plan, a merge, the approval, the deploy, and a smoke test, for the Python and the Spring Boot sample.
-- The Custom Application example: a first deploy, an update, a pull request plan with no changes, and the Pulumi state lock on Azure Blob Storage.
+- **Workload example.** A pull request plan, a merge, the approval, the deploy, and a smoke test, for the Python and the Spring Boot sample.
+- **Custom Application example.** A first deploy, an update, a pull request plan with no changes, and the Pulumi state lock on Azure Blob Storage.
 
-Not tested: a self-hosted agent, Azure DevOps Server, a network without access to GitHub, and a DataRobot release other than the cloud release used for testing. Each README marks its unverified steps.
+The examples weren't tested with a self-hosted agent, Azure DevOps Server, a network without access to GitHub, or a self-managed DataRobot installation. Each example README marks its unverified steps.
 
-## Things to know
+## Limitations
 
-Two points affect how the examples behave.
+These limitations affect how the examples behave:
 
-- The Custom Application example needs a DataRobot release that can build an image from a Docker context. The README in that folder describes the resources it creates.
-- One pipeline step sets a fixed file time on the app folder. It stops every run from planning a rebuild. Remove it after a `datarobot` provider release that sets a fixed archive time ([terraform-provider-datarobot#438](https://github.com/datarobot-community/terraform-provider-datarobot/pull/438)).
+- The Custom Application example needs a DataRobot release that can build an image from a Docker context. Its README describes the resources it creates.
+- One pipeline step of the Custom Application example sets a fixed file time on the app folder, so that an unchanged app doesn't plan a rebuild on every run. Remove the step after a `datarobot` provider release that sets a fixed archive time ([terraform-provider-datarobot#438](https://github.com/datarobot-community/terraform-provider-datarobot/pull/438)).
 
 ## Troubleshooting
 
-[TROUBLESHOOTING.md](TROUBLESHOOTING.md) lists the failures seen while running the examples, with the cause and the fix for each.
+For failed or stuck runs, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md). It lists each failure with its cause and fix.
+
+## Contributing
+
+To report a problem or propose a change, see [CONTRIBUTING.md](CONTRIBUTING.md). AI coding agents, and people who adopt the examples, can start with [AGENTS.md](AGENTS.md). To report a vulnerability, see [SECURITY.md](SECURITY.md).
 
 ## License
 
-Apache License 2.0. See [LICENSE](LICENSE).
+This project is licensed under the Apache License 2.0. See [LICENSE](LICENSE).
