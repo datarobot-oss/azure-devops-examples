@@ -6,7 +6,7 @@
 """Check whether you can deploy a workload to a DataRobot cluster.
 
 Reads what the platform says about your account and checks the `dr` CLI. Read-only. Never prints a token. It does not
-build anything, so a restricted network can still stop a build. The example in templates/hello-workload settles that.
+build anything, so a restricted network can still stop a build. The example in templates/azure-devops-workload settles that.
 
 Needs DATAROBOT_ENDPOINT and DATAROBOT_API_TOKEN. Usage:
 
@@ -147,7 +147,7 @@ def main():
             print(f"  - {problem}")
         sys.exit(1)
     print(
-        "\nReady. The platform side is fine. Deploy templates/hello-workload next to find out whether builds work here."
+        "\nReady. The platform side is fine. Deploy templates/azure-devops-workload next to find out whether builds work here."
     )
 
 
