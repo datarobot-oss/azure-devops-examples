@@ -1,0 +1,11 @@
+.DS_Store
+__pycache__/
+*.pyc
+.venv/
+.env
+# Maven build output.
+target/
+# The upload tarball of the custom application example.
+*.tar
+# The cache of dr workload up. Commit .datarobot.yaml, not this folder.
+.datarobot/

@@ -1,0 +1,39 @@
+# Builds each sample app image, so a broken Dockerfile or a base-image bump
+# from Dependabot fails here and not in a customer's pipeline.
+name: build-samples
+
+on:
+  pull_request:
+    paths: ["templates/**/app/**", "templates/**/app-java/**", ".github/workflows/build-samples.yml"]
+  push:
+    branches: [main]
+    paths: ["templates/**/app/**", "templates/**/app-java/**", ".github/workflows/build-samples.yml"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-samples-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: build ${{ matrix.context }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        context:
+          - templates/azure-devops-workload/app
+          - templates/azure-devops-workload/app-java
+          - templates/azure-devops-custom-app/app
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      # The pipelines deploy linux/amd64 images, and so does this check.
+      - name: Build the image
+        run: docker build --platform linux/amd64 --tag sample:ci "$CONTEXT"
+        env:
+          CONTEXT: ${{ matrix.context }}

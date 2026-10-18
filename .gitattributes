@@ -1,0 +1,8 @@
+# Keep line endings as LF on Windows checkouts. A CRLF in a shell script or a
+# Dockerfile breaks the image build and the app start script.
+* text=auto eol=lf
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.yml text eol=lf
+*.py text eol=lf
+*.java text eol=lf

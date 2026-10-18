@@ -1,0 +1,44 @@
+---
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+  - package-ecosystem: "docker"
+    directories:
+      - "/templates/azure-devops-workload/app"
+      - "/templates/azure-devops-workload/app-java"
+      - "/templates/azure-devops-custom-app/app"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+  - package-ecosystem: "maven"
+    directories:
+      - "/templates/azure-devops-workload/app-java"
+      - "/templates/azure-devops-custom-app/app"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+  - package-ecosystem: "pip"
+    directory: "/templates/azure-devops-workload/app"
+    schedule:
+      interval: "weekly"
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"

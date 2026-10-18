@@ -35,6 +35,10 @@ Two points affect how the examples behave.
 - The Custom Application example needs a DataRobot release that can build an image from a Docker context. The README in that folder describes the resources it creates.
 - One pipeline step sets a fixed file time on the app folder. It stops every run from planning a rebuild. Remove it after a `datarobot` provider release that sets a fixed archive time ([terraform-provider-datarobot#438](https://github.com/datarobot-community/terraform-provider-datarobot/pull/438)).
 
+## Troubleshooting
+
+[TROUBLESHOOTING.md](TROUBLESHOOTING.md) lists the failures seen while running the examples, with the cause and the fix for each.
+
 ## License
 
 Apache License 2.0. See [LICENSE](LICENSE).

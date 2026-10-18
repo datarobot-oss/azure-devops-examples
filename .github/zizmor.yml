@@ -1,0 +1,12 @@
+# Settings for zizmor, which the workflow-lint workflow runs. Every ignore names
+# one file and says why.
+rules:
+  # review-router.yml calls the shared Review Router workflow of the
+  # datarobot-oss organization, which needs these triggers, the secrets
+  # inheritance, and a commit pin that the organization sets.
+  dangerous-triggers:
+    ignore:
+      - review-router.yml
+  secrets-inherit:
+    ignore:
+      - review-router.yml
