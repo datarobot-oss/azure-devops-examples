@@ -16,6 +16,7 @@ Guidance for AI coding agents and for people who start here. This repository hol
 - Never print or log a token or any secret variable in a pipeline step.
 - Don't commit `.datarobot/`, the cache of `dr workload up`. The `.gitignore` excludes it. Do commit `.datarobot.yaml`.
 - Use the API key of a service account, not a person.
+- Run `uvx pre-commit install` once per clone. The hooks run gitleaks with the rules in `.gitleaks.toml`, which flag a literal value assigned to `DATAROBOT_API_TOKEN`, `AZURE_STORAGE_KEY`, or `PULUMI_CONFIG_PASSPHRASE`. A reference such as `$(DATAROBOT_API_TOKEN)` passes.
 
 ## Know how the pipelines behave
 
