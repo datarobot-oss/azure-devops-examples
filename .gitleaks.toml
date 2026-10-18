@@ -1,0 +1,26 @@
+# Read by gitleaks in the secret-scan workflow and in the pre-commit hook.
+# It keeps the default rules and adds the secrets these pipelines handle. Each
+# rule matches a literal value assigned to the variable, so a reference such as
+# $(DATAROBOT_API_TOKEN) or ${DATAROBOT_API_TOKEN} passes.
+title = "azure-devops-examples"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "datarobot-api-token-assignment"
+description = "A DataRobot API token assigned a literal value"
+regex = '''(?i)DATAROBOT_API_TOKEN["']?\s*[:=]\s*["']?[A-Za-z0-9_\-=+/]{20,}'''
+keywords = ["datarobot_api_token"]
+
+[[rules]]
+id = "azure-storage-account-key"
+description = "An Azure storage account key assigned a literal value"
+regex = '''(?i)(?:AZURE_STORAGE_KEY|AccountKey)["']?\s*[:=]\s*["']?[A-Za-z0-9+/]{86}=='''
+keywords = ["azure_storage_key", "accountkey"]
+
+[[rules]]
+id = "pulumi-passphrase-assignment"
+description = "A Pulumi config passphrase assigned a literal value"
+regex = '''(?i)PULUMI_CONFIG_PASSPHRASE["']?\s*[:=]\s*(?:"[^"$\r\n]{8,}"|'[^'$\r\n]{8,}'|[^\s$"'(){}]{8,})'''
+keywords = ["pulumi_config_passphrase"]

@@ -27,7 +27,8 @@ CI runs these checks on every pull request. Run them locally before you push.
 | yamllint | Every YAML file, including the pipelines | `uvx yamllint==1.32.0 --strict .` |
 | zizmor and actionlint | The workflows and the Dependabot config | The `workflow-lint` workflow. The image digests are in `.github/workflows/workflow-lint.yml`. |
 | Sample builds | The `Dockerfile` of each sample app | `docker build --platform linux/amd64 templates/azure-devops-workload/app` |
-| gitleaks | The full git history | The `secret-scan` workflow. |
+| gitleaks | The full git history, with extra rules in `.gitleaks.toml` for the DataRobot API token, the Azure storage key, and the Pulumi passphrase | The `secret-scan` workflow. |
+| pre-commit | Secrets, private keys, large files, and whitespace, before each commit | `uvx pre-commit install` once per clone, then commit as usual. |
 
 ## Opening new issues
 
