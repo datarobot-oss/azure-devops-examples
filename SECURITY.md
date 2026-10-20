@@ -4,7 +4,7 @@
 
 Do not open a public GitHub issue for a security vulnerability.
 
-Email the maintainers listed in [CONTRIBUTING.md](CONTRIBUTING.md). If you don't get a response within seven days, email oss-community-management@datarobot.com. For questions about DataRobot products, contact support@datarobot.com.
+Email the maintainers listed in [CONTRIBUTING.md](CONTRIBUTING.md). If you don't get a response, email oss-community-management@datarobot.com. For questions about DataRobot products, contact support@datarobot.com.
 
 Include the affected file, steps to reproduce, and the impact you see. The maintainers confirm receipt, investigate, and tell you when a fix is released.
 
