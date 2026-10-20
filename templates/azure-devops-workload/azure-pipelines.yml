@@ -1,0 +1,101 @@
+# Deploys the app in ./app to DataRobot as a workload.
+# Every run prints the plan. The apply job waits for the approval check on the `prod` environment.
+
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - app/**
+      - app-java/**
+pr: none
+
+parameters:
+  # Leave this empty to run on a Microsoft-hosted agent. Enter a self-hosted pool name for an air-gapped network.
+  # It is not the environment name.
+  - name: selfHostedPool
+    type: string
+    default: ""
+  # Name of a Secure file that holds the dr release tarball. An empty value downloads it from GitHub.
+  - name: drSecureFile
+    type: string
+    default: ""
+  # Directory of the app to deploy. Set app-java for the Spring Boot sample.
+  - name: appDir
+    type: string
+    default: app
+
+variables:
+  - group: datarobot-deploy  # DATAROBOT_ENDPOINT, and DATAROBOT_API_TOKEN as a secret
+  - name: DR_VERSION
+    value: v0.14.1
+  - name: DR_TARBALL_SHA256
+    value: 50030b04fb4c9a657135932c0c8bfac878b40e223037d181aac970212f0b598c
+  - name: APP_DIR
+    value: ${{ parameters.appDir }}
+
+stages:
+  - stage: Plan
+    jobs:
+      - job: plan
+        timeoutInMinutes: 15
+        pool:
+          ${{ if eq(parameters.selfHostedPool, '') }}:
+            vmImage: ubuntu-24.04
+          ${{ else }}:
+            name: ${{ parameters.selfHostedPool }}
+        steps:
+          - checkout: self
+          - template: templates/install-dr.yml
+            parameters:
+              drSecureFile: ${{ parameters.drSecureFile }}
+          - script: dr workload up --yes --dry-run --dir "$(APP_DIR)"
+            displayName: Print the plan
+            env:
+              DATAROBOT_ENDPOINT: $(DATAROBOT_ENDPOINT)
+              DATAROBOT_API_TOKEN: $(DATAROBOT_API_TOKEN)
+
+  # A pull request run stops after the plan. Only a run on main reaches the approval check.
+  - stage: Apply
+    dependsOn: Plan
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: apply
+        environment: prod
+        timeoutInMinutes: 30
+        pool:
+          ${{ if eq(parameters.selfHostedPool, '') }}:
+            vmImage: ubuntu-24.04
+          ${{ else }}:
+            name: ${{ parameters.selfHostedPool }}
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - template: templates/install-dr.yml
+                  parameters:
+                    drSecureFile: ${{ parameters.drSecureFile }}
+                - script: dr workload up --yes --promote --dir "$(APP_DIR)"
+                  displayName: Deploy
+                  env:
+                    DATAROBOT_ENDPOINT: $(DATAROBOT_ENDPOINT)
+                    DATAROBOT_API_TOKEN: $(DATAROBOT_API_TOKEN)
+                - script: |
+                    endpoint="$(dr workload endpoint --dir "$(APP_DIR)")"
+                    echo "Workload endpoint: ${endpoint}"
+                    # A route can answer 503 for a few seconds after the workload reports running.
+                    for attempt in 1 2 3 4 5 6; do
+                      code="$(curl -s -o /dev/null -w '%{http_code}' \
+                        -H "Authorization: Bearer ${DATAROBOT_API_TOKEN}" "${endpoint}hello")"
+                      echo "Attempt ${attempt}: HTTP ${code}"
+                      [ "${code}" = "200" ] && exit 0
+                      sleep 10
+                    done
+                    echo "The workload did not answer 200 on /hello."
+                    exit 1
+                  displayName: Smoke test
+                  env:
+                    DATAROBOT_ENDPOINT: $(DATAROBOT_ENDPOINT)
+                    DATAROBOT_API_TOKEN: $(DATAROBOT_API_TOKEN)

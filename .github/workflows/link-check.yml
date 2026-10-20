@@ -1,0 +1,38 @@
+# Checks every link in the Markdown files with lychee. It runs weekly, because
+# a link can break without any change in this repository. A dead link fails
+# the run, and GitHub notifies the person who enabled the schedule. For a link
+# that blocks bots or needs a login, create a .lycheeignore file with one
+# regular expression per line.
+name: link-check
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+  pull_request:
+    paths: ["**/*.md", ".github/workflows/link-check.yml"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: link-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lychee:
+    name: lychee
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      # 429 counts as alive, because a rate limit says nothing about the link.
+      # The token lifts the GitHub API rate limit for github.com links.
+      - uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8  # v2.9.0
+        with:
+          args: --no-progress --accept "200..=299,429" --max-retries 3 "./**/*.md"
+          fail: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}

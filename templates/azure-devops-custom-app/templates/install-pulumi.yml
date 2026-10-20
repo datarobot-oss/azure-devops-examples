@@ -1,0 +1,10 @@
+# Installs the pinned Pulumi CLI and checks its checksum.
+steps:
+  - script: |
+      curl -fsSL -o "$(Agent.TempDirectory)/pulumi.tar.gz" \
+        "https://github.com/pulumi/pulumi/releases/download/$(PULUMI_VERSION)/pulumi-$(PULUMI_VERSION)-linux-x64.tar.gz"
+      echo "$(PULUMI_TARBALL_SHA256)  $(Agent.TempDirectory)/pulumi.tar.gz" | sha256sum --check -
+      mkdir -p "$(Agent.TempDirectory)/pulumi-bin"
+      tar -xzf "$(Agent.TempDirectory)/pulumi.tar.gz" -C "$(Agent.TempDirectory)/pulumi-bin" --strip-components=1
+      echo "##vso[task.prependpath]$(Agent.TempDirectory)/pulumi-bin"
+    displayName: Download and verify Pulumi $(PULUMI_VERSION)

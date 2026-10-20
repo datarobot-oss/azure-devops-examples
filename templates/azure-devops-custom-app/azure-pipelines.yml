@@ -1,0 +1,114 @@
+# Deploys the app in ./app to DataRobot as a Custom Application with Pulumi.
+# Every run prints the plan. The apply job waits for the approval check on the `prod` environment.
+
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - app/**
+      - source/**
+      - Pulumi.yaml
+pr: none
+
+parameters:
+  # Leave this empty to run on a Microsoft-hosted agent. Enter a self-hosted pool name for an air-gapped network.
+  # It is not the environment name.
+  - name: selfHostedPool
+    type: string
+    default: ""
+
+variables:
+  # DATAROBOT_ENDPOINT, and as secrets: DATAROBOT_API_TOKEN, AZURE_STORAGE_ACCOUNT,
+  # AZURE_STORAGE_KEY and PULUMI_CONFIG_PASSPHRASE.
+  - group: datarobot-deploy
+  - name: PULUMI_VERSION
+    value: v3.267.0
+  - name: PULUMI_TARBALL_SHA256
+    value: 527c1ce7c16cb38525a96d55422f221e819476e2b0743ae55c9862ad775ae10a
+  - name: STATE_CONTAINER
+    value: pulumi-state
+  - name: STACK
+    value: prod
+
+stages:
+  - stage: Plan
+    jobs:
+      - job: plan
+        timeoutInMinutes: 15
+        pool:
+          ${{ if eq(parameters.selfHostedPool, '') }}:
+            vmImage: ubuntu-24.04
+          ${{ else }}:
+            name: ${{ parameters.selfHostedPool }}
+        steps:
+          - checkout: self
+          - template: templates/install-pulumi.yml
+          - template: templates/fix-file-times.yml
+          - script: |
+              pulumi login "azblob://$(STATE_CONTAINER)"
+              pulumi stack select --create "$(STACK)"
+              pulumi preview --stack "$(STACK)"
+            displayName: Print the plan
+            env:
+              AZURE_STORAGE_ACCOUNT: $(AZURE_STORAGE_ACCOUNT)
+              AZURE_STORAGE_KEY: $(AZURE_STORAGE_KEY)
+              PULUMI_CONFIG_PASSPHRASE: $(PULUMI_CONFIG_PASSPHRASE)
+              PULUMI_SKIP_UPDATE_CHECK: "true"
+              DATAROBOT_ENDPOINT: $(DATAROBOT_ENDPOINT)
+              DATAROBOT_API_TOKEN: $(DATAROBOT_API_TOKEN)
+
+  # A pull request run stops after the plan. Only a run on main reaches the approval check.
+  - stage: Apply
+    dependsOn: Plan
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: apply
+        environment: prod
+        timeoutInMinutes: 45
+        pool:
+          ${{ if eq(parameters.selfHostedPool, '') }}:
+            vmImage: ubuntu-24.04
+          ${{ else }}:
+            name: ${{ parameters.selfHostedPool }}
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - template: templates/install-pulumi.yml
+                - template: templates/fix-file-times.yml
+                - script: |
+                    pulumi login "azblob://$(STATE_CONTAINER)"
+                    pulumi stack select --create "$(STACK)"
+                    pulumi up --yes --skip-preview --stack "$(STACK)"
+                  displayName: Deploy
+                  env:
+                    AZURE_STORAGE_ACCOUNT: $(AZURE_STORAGE_ACCOUNT)
+                    AZURE_STORAGE_KEY: $(AZURE_STORAGE_KEY)
+                    PULUMI_CONFIG_PASSPHRASE: $(PULUMI_CONFIG_PASSPHRASE)
+                    PULUMI_SKIP_UPDATE_CHECK: "true"
+                    DATAROBOT_ENDPOINT: $(DATAROBOT_ENDPOINT)
+                    DATAROBOT_API_TOKEN: $(DATAROBOT_API_TOKEN)
+                - script: |
+                    pulumi login "azblob://$(STATE_CONTAINER)"
+                    url="$(pulumi stack output appUrl --stack "$(STACK)")"
+                    echo "Application URL: ${url}"
+                    # A route can answer 503 for a few seconds after the app reports running.
+                    for attempt in 1 2 3 4 5 6; do
+                      code="$(curl -s -o /dev/null -w '%{http_code}' \
+                        -H "Authorization: Bearer ${DATAROBOT_API_TOKEN}" "${url}hello")"
+                      echo "Attempt ${attempt}: HTTP ${code}"
+                      [ "${code}" = "200" ] && exit 0
+                      sleep 10
+                    done
+                    echo "The application did not answer 200 on /hello."
+                    exit 1
+                  displayName: Smoke test
+                  env:
+                    AZURE_STORAGE_ACCOUNT: $(AZURE_STORAGE_ACCOUNT)
+                    AZURE_STORAGE_KEY: $(AZURE_STORAGE_KEY)
+                    PULUMI_CONFIG_PASSPHRASE: $(PULUMI_CONFIG_PASSPHRASE)
+                    PULUMI_SKIP_UPDATE_CHECK: "true"
+                    DATAROBOT_API_TOKEN: $(DATAROBOT_API_TOKEN)
